@@ -1,0 +1,32 @@
+bought = pd.DataFrame(bought_list, columns=["id", "product_name", "buy_date", "buy_price", "expiration_date", "count"])
+
+products = ["bananen", "yoghurt", "havermout", "thee", "kattenvoer", "drop", "prei", "tofu", "hagelsag", "zeep"]
+# y-m-d, én ik zal maar een beetje goedkoop nemen om nog een beetje winst te maken. 
+
+# Inkoop
+product1 = [1, "bananen", "2022-01-2", 0.79, "2022-03-07", 3]
+product2 = [2, "yoghurt", "yesterday", 0.55, "tomorrow", 1]
+product3 = [3, "havermout", "2021-07-13", 0.99, "2022-05-20", 4]
+product4 = [4, "thee", "2020-03-07", 0.35, "today", 1]
+product5 = [5, "kattenvoer", "yesterday", 2.99, "2024-09-07", 2]
+product6 = [6, "drop", "2022-02-12", 5.00, "2025-04-01", 8]
+product7 = [7, "prei", "today", 2.00, "2022-03.01", 6]
+product8 = [8, "tofu", "2022-01-20", 1.10, "2022-05-05", 1]
+product9 = [9, "hagelslag", "2021-12-30", 3.00, "2031-01-01", 3]
+# nog eentje met een time-delta 
+product10 = [10, "zeep", -50, 1.20, 15, 2]
+
+# Verkoop (5)
+
+sale =  "id", "product", "amount", "sell_price", "sell_date"]
+
+sale1 = [1, "bananen", 1, 1.00, 3]
+# give error, for not in stock; 
+sale2 = [2, "yoghurt", 3, 4.00, "tomorrow"]
+sale3 = [3, "havermout", 3, 1.80, "today"]
+sale6 = [6, "drop", 5, 7.50, -4]
+
+
+
+# uitvoeren 
+python3 sample.py var1 var2

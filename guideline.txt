@@ -1,0 +1,161 @@
+# Superpy 
+
+Superpy is een supermarktinventaris-command-line tool die o.a. de voorraad én de winst kan bijhouden. 
+Om de tool te gebruiken typ je het volgende command in de powershell `python main.py` gevolgd door de eventuele argumenten die de opgevraagde functie nodig heeft. Voor een overzicht van de argumenten kun je altijd `python main.py --h`
+gebruiken. 
+
+    python main.py --h
+
+
+## De functies 
+
+De functies worden aangeroepen met `--action`. Dit is required argument. 
+
+choices= ["inventory" ,"buy" ,"sell" ,"revenue" ,"profit" ,"chart" ,"excel"]
+
+bijv `chart` dat geen verplichte additionele argumenten nodig heeft. 
+    python main.py --action chart 
+
+### inventory 
+
+PS C:\Users\Administrator\Winc\SuperPy> python main.py --action inventory --argument "today" 
+
+2031-01-01 00:00:00
+   id    product_name    buy_date  buy_price expiration_date  count
+0   9       hagelslag  2021-12-30       3.00      2031-01-01      9
+1   1         bananen   2022-01-2       0.79      2022-03-07      1
+2   3       havermout  2021-07-13       0.99      2022-05-20      8
+
+### buy (inkoop)
+Nieuwe producten kunnen altijd worden toegevoegd (met een uniek id-nummer), maar voor het gemak heb ik er voor gekozen om de code met de volgende 10 producten te schrijven én uit te testen. Tijdens het testen van de basis-functies heb ik de producten als het data-type list moeten invoeren omdat argparse zo is ingericht dat het argumenten automatisch in een list plaatst. 
+
+    products = ["bananen", "yoghurt", "havermout", "thee", "kattenvoer", "drop", "prei", "tofu", "hagelsag", "zeep"]
+
+Als je bijvoorbeeld ook "tomatenblokjes" zou willen toevoegen geef je de powershell het volgende command ('id',   
+                        'product_name', 'buy_date', 'buy_price', 'expiration_date', 'count');
+
+**! De buy_price is pér individueel product, dus tomatenblokjes (7 x 2.00) !** 
+
+     PS C:\Users\Administrator\Winc\SuperPy> python main.py --action buy --argument 11, "tomatenblokjes", "2022-02-20", 2,00, "2022-03-20", 7
+    >>> tomatenblokjes added to inventory
+
+Het product is nu toegevoegd aan bought.csv. Je kunt het bekijken door inventory te gebruiken;
+     PS C:\Users\Administrator\Winc-BE\SuperPy> python main.py --action inventory --argument "today" 
+
+    id    product_name    buy_date  buy_price expiration_date  count
+    0   9       hagelslag  2021-12-30       3.00      2031-01-01      9
+    1   3       havermout  2021-07-13       0.99      2022-05-20      5
+    2  11  tomatenblokjes  2022-02-20       2.00      2022-03-20      7
+
+
+### sell (verkoop)
+Voor het verkopen van een product geef je de powershell het volgende command (id, product, amount, sell_price, sell_date)
+; 
+
+**! De sell_price is voor alle producten die je koopt samen !**
+
+    PS C:\Users\Administrator\Winc\SuperPy> python main.py --action sell --argument 2, "yoghurt", 3, 4.00, "tomorrow"
+
+omdat dit product (in deze test) niet voorraadig is krijg je; 
+    >>> ERROR:yoghurt not in stock.
+
+Bij havermout, die in deze test wel op voorraad zijn; 
+    PS C:\Users\Administrator\Winc\SuperPy> python main.py --action sell --argument 3, "havermout", 3, 1.80, "today"
+    >>> havermout in stock
+    >>> havermout is sold
+
+In het csv-file sold.csv is nu de verkoop van havermout toegevoegd. 
+
+In het begin hebben we 2 blikjes tomatenblokjes toegevoegd aan onze voorraad, stel we verkopen er 1. 
+
+    PS C:\Users\Administrator\Winc\SuperPy> python main.py --action sell --argument 11, "tomatenblokjes", 1, 4.00, "today" 
+    tomatenblokjes in stock
+    tomatenblokjes is sold
+
+Dan geeft de de voorraad het volgende nu aan; count is 1 blikje. 
+
+PS C:\Users\Administrator\Winc\SuperPy> python main.py --action inventory --argument -5, "tomorrow" 
+
+    id    product_name    buy_date  buy_price expiration_date  count
+    0   9       hagelslag  2021-12-30       3.00      2031-01-01      9
+    1   3       havermout  2021-07-13       0.99      2022-05-20      5
+    2  11  tomatenblokjes  2022-02-20       2.00      2022-03-20      1
+
+### profit 
+
+Profit heeft 2 argumenten nodig (datum 1 en datum 2), omdat het om een periode gaat; 
+
+PS C:\Users\Administrator\Winc-BE\SuperPy> python main.py --action profit --argument "2022-02-01", "today"
+   Unnamed: 0  id    product  amount  sell_price  profit   sell_date
+0           0   1    bananen       1         1.0    0.21  2022-02-14
+1           0   1    bananen       1         1.0    0.21  2022-02-19
+2           0   1    bananen       1         1.0    0.21  2022-02-22
+3           0   1    bananen       1         1.0    0.21  2022-02-22
+4           0   1    bananen       1         1.0    0.21  2022-02-22
+5           0   3  havermout       3         1.8   -1.17  2022-02-21
+-0.75
+
+(oei, -0,75, ik had de havermout iets duurder moeten maken)
+de datum is vandaag 21-02-2021, dus tellen deze producten nóg niet mee; 
+2           0   1    bananen       1         1.0    0.21  2022-02-22
+3           0   1    bananen       1         1.0    0.21  2022-02-22
+4           0   1    bananen       1         1.0    0.21  2022-02-22
+
+
+**inkoop en verkoop op dezelfde dag, de profit telt de dag erna pas mee**
+
+PS C:\Users\Administrator\Winc-BE\SuperPy> python main.py --action profit --argument "today", "tomorrow"       
+   Unnamed: 0  id         product  amount  sell_price  profit   sell_date                       
+0           0  11  tomatenblokjes       1           4     2.0  2022-02-21
+1           0   9       hagelslag       4           8    -4.0  2022-02-23
+2.0
+2.0
+PS C:\Users\Administrator\Winc-BE\SuperPy>  python main.py --action profit --argument "today", 2
+   Unnamed: 0  id         product  amount  sell_price  profit   sell_date
+0           0  11  tomatenblokjes       1           4     2.0  2022-02-21
+1           0   9       hagelslag       4           8    -4.0  2022-02-23
+2.0
+-4.0
+-2.0
+
+
+### chart 
+Chart heeft geen argument nodig en toont de huidige voorraad in een grafiek; 
+
+    PS C:\Users\Administrator\Winc\SuperPy> python main.py --action chart
+    <BarContainer object of 3 artists>
+
+### excel 
+Excel exporteert data naar een excel bestand (.xlsx)
+Excel heeft 1 argument nodig. Je kunt kiezen uit de volgende CSV bestanden:
+
+"bought.csv" : de voorraad 
+"expired.csv" : de goederen die over datum zijn geraakt, en daarmee - de inkoopprijs van de winst gaan. 
+"sold.csv" : wat er is verkocht 
+
+excel: choose; 'bought.csv', 'expired.csv' or 'sold.csv
+
+    PS C:\Users\Administrator\Winc\SuperPy> python main.py --action excel --argument "sold.csv" 
+
+## advanced_time 
+
+Met deze functie verander je de datum die de code herkent als vandaag. 
+Je kunt vóór of terug in de tijd gaan. Bijv. het positieve getal 7 of het negatieve getal -5. 
+
+    PS C:\Users\Administrator\Winc\SuperPy> python main.py --action advanced_time --argument -5
+    The new date has been set as 2022-02-23
+
+Om de datum weer te resetten naar de eigenlijke datum gebruik je het volgende argument (reset); 
+
+    PS C:\Users\Administrator\Winc\SuperPy> python main.py --action advanced_time --argument reset
+    Reset completed; real date 2022-02-28 is used
+
+Voorbeeld: 
+    PS C:\Users\Administrator\Winc\SuperPy> python main.py --action advanced_time --argument 20
+    The new date has been set as 2022-03-20
+
+    PS C:\Users\Administrator\Winc-BE\SuperPy> python main.py --action buy --argument 2, "yoghurt", "yesterday", 0.55, "tomorrow", 1 
+    ['2', 'yoghurt', '2022-03-19', '0.55', '2022-03-21', '1']
+
+
+
